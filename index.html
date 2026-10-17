@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ChatKing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d8d'/%3E%3Cstop offset='1' stop-color='%23ff8fb8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M20 30Q20 18 32 18H88Q100 18 100 30V70Q100 82 88 82H52L36 96L38 82H32Q20 82 20 70Z' fill='url(%23g)'/%3E%3Cpath d='M42 62V42L52 52L60 36L68 52L78 42V62Z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff4d8d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ChatKing">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+:root{--p:#ff4d8d;--pd:#d6336c;--pl:#ffe3ef;--txt:#262626;--muted:#8e8e8e;--line:#dbdbdb}
+html,body{height:100%}
+body{background:#f0f0f0;overflow:hidden}
+button{cursor:pointer;border:0;font-size:14px;font-family:inherit}
+input{font-family:inherit;font-size:15px;outline:none}
+.screen{display:none;height:100%;flex-direction:column;max-width:600px;margin:auto;background:#fff;position:relative}
+.screen.active{display:flex}
+.hidden{display:none!important}
+.err{color:#ed4956;font-size:13px;text-align:center}
+.empty{text-align:center;color:var(--muted);padding:30px 24px;font-size:14px;line-height:1.5}
+
+/* LOGIN */
+#auth{background:#fafafa;justify-content:center;align-items:center;padding:20px}
+.ig-wrap{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+.ig-box{background:#fff;border:1px solid var(--line);border-radius:4px;padding:36px 40px;display:flex;flex-direction:column;gap:8px}
+.ig-logo{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:16px}
+.ig-logo span{font-size:30px;font-weight:700;color:var(--pd);font-family:"Segoe Script","Brush Script MT",cursive}
+.ig-in{background:#fafafa;border:1px solid var(--line);border-radius:3px;padding:10px 8px;color:var(--txt)}
+.ig-in:focus{border-color:#a8a8a8}
+.ig-btn{background:var(--p);color:#fff;border-radius:8px;padding:9px;font-weight:600;margin-top:10px}
+.ig-small{padding:20px;flex-direction:row;justify-content:center;align-items:center;gap:6px;font-size:14px}
+#toggleMode{background:none;color:var(--p);font-weight:600;padding:0}
+
+/* TOP BAR */
+.top{background:var(--p);color:#fff;height:56px;padding:0 12px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.top b{font-size:18px;font-weight:600}
+.top .back{background:none;color:#fff;font-size:22px;padding:4px 6px}
+.sub{font-size:12px;color:#ffe3ef}
+
+/* AVATAR */
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--pl);color:var(--pd);display:grid;place-items:center;font-weight:700;font-size:18px;flex-shrink:0}
+.avatar.sm{width:36px;height:36px;font-size:15px}
+.avatar.big{width:110px;height:110px;font-size:44px;margin:24px auto 8px}
+
+/* LISTS / CARDS */
+.pane{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+.item:active{background:#fff5f9}
+.mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.mid b{font-weight:600;font-size:16px}
+.mid small,.last{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;font-size:12px;color:var(--pd)}
+.badge{background:var(--p);color:#fff;border-radius:999px;min-width:20px;height:20px;padding:0 6px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #f0f0f0;border-radius:12px}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btns button{flex:1}
+
+/* BOTTOM NAV */
+nav{display:flex;border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0}
+nav button{flex:1;background:#fff;color:var(--muted);padding:8px 4px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button.on{color:var(--pd);font-weight:700}
+nav i{font-style:normal;font-size:20px}
+
+/* SEARCH / PROFILE */
+.pad{padding:14px}
+.search{width:100%;border:1px solid var(--line);border-radius:999px;padding:10px 16px;background:#f5f5f5;color:var(--txt)}
+.pbtn{background:var(--p);color:#fff;border-radius:8px;padding:10px 14px;font-weight:600;width:100%}
+.gbtn{background:var(--pl);color:var(--pd);border-radius:8px;padding:9px 14px;font-weight:600}
+.idbox{margin:0 auto;background:var(--pl);border-radius:10px;padding:8px 16px;font-size:18px;color:var(--pd);font-weight:700;width:fit-content}
+.stats{display:flex;justify-content:space-around;padding:16px 0;text-align:center}
+.stats b{display:block;font-size:18px}
+.stats small{color:var(--muted);font-size:13px}
+.field{display:flex;flex-direction:column;gap:6px;padding:14px;border-bottom:1px solid #f0f0f0}
+.field label{font-size:12px;color:var(--muted)}
+.field input{border:0;border-bottom:1px solid var(--line);padding:6px 0;color:var(--txt)}
+
+/* CHAT PAGE */
+#msgs{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:4px;background:#fde8f2;min-height:0}
+.bub{max-width:80%;padding:6px 9px 4px;border-radius:10px;font-size:15px;line-height:1.35;word-wrap:break-word;white-space:pre-wrap;box-shadow:0 1px 1px #0001}
+.bub.me{align-self:flex-end;background:#ffd1e3;border-top-right-radius:2px}
+.bub.them{align-self:flex-start;background:#fff;border-top-left-radius:2px}
+.meta{font-size:11px;color:var(--muted);text-align:right;margin-top:2px;white-space:nowrap}
+.tk{margin-left:3px;letter-spacing:-2px}
+.tk.read{color:#34b7f1}
+#bar{display:flex;align-items:center;gap:8px;padding:8px;background:#f0f0f0;flex-shrink:0}
+#msgInput{flex:1;border:0;border-radius:22px;padding:11px 16px;background:#fff;color:var(--txt);min-width:0}
+#sendBtn{width:44px;height:44px;border-radius:50%;background:var(--p);color:#fff;font-size:18px;flex-shrink:0;display:grid;place-items:center}
+
+.or{display:flex;align-items:center;gap:10px;margin:10px 0 4px}
+.or span{flex:1;height:1px;background:var(--line)}
+.or small{color:var(--muted);font-size:13px;font-weight:600}
+.gbtn2{background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.gbtn2:hover{background:#fafafa}
+
+#auth{background:#f0f2f5;overflow-y:auto;justify-content:flex-start;align-items:stretch;padding:0}
+#auth .fb-wrap{margin:auto;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px 18px}
+.fb-brand{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.fb-logo{filter:drop-shadow(0 6px 10px rgba(255,77,141,.35))}
+.fb-title{font-family:"Pacifico","Segoe Script","Brush Script MT",cursive;font-weight:400;font-size:46px;line-height:1.15;
+  background:linear-gradient(135deg,#ff4d8d,#d6336c);-webkit-background-clip:text;background-clip:text;color:transparent;
+  padding:4px 8px}
+.fb-brand p{font-size:15px;color:#65676b}
+.fb-side{display:flex;flex-direction:column;gap:14px;width:100%}
+.fb-card{background:#fff;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,.08),0 8px 20px rgba(0,0,0,.08);padding:20px;display:flex;flex-direction:column;gap:12px}
+.fb-in{height:50px;border:1px solid #dddfe2;border-radius:8px;padding:12px 14px;font-size:16px;color:#1c1e21;width:100%;background:#fff}
+.fb-in:focus{border-color:var(--p);box-shadow:0 0 0 3px #ffd1e3}
+.fb-btn{height:48px;background:var(--p);color:#fff;border-radius:8px;font-size:18px;font-weight:700;width:100%}
+.fb-btn:hover{background:var(--pd)}
+.gbtn2{height:48px;border-radius:8px;width:100%}
+#toggleMode{background:var(--pd);color:#fff;height:48px;border-radius:8px;font-size:16px;font-weight:700;padding:0 16px;width:100%}
+#toggleMode:hover{background:#b82a57}
+#switchText{display:none}
+
+nav button{position:relative}
+#navBadge{position:absolute;top:2px;left:56%;font-style:normal;min-width:18px;height:18px;font-size:11px}
+.sec{padding:10px 14px;font-size:13px;font-weight:700;color:var(--pd);background:#fff5f9}
+.reqbtns{display:flex;gap:6px}
+.reqbtns button{padding:8px 12px;border-radius:8px;font-weight:600}
+.field input[readonly]{color:var(--muted)}
+.screen{height:100dvh}
+body{overscroll-behavior:none}
+@media (max-width:600px){input{font-size:16px!important}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN / SIGNUP (Facebook style) -->
+<section id="auth" class="screen active">
+  <div class="fb-wrap">
+    <div class="fb-brand">
+      <svg class="fb-logo" width="96" height="96" viewBox="0 0 120 120" aria-label="ChatKing logo">
+        <defs><linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d8d"/><stop offset="1" stop-color="#ff8fb8"/></linearGradient></defs>
+        <path d="M20 30Q20 18 32 18H88Q100 18 100 30V70Q100 82 88 82H52L36 96L38 82H32Q20 82 20 70Z" fill="url(#gl)"/>
+        <path d="M42 62V42L52 52L60 36L68 52L78 42V62Z" fill="#fff"/>
+      </svg>
+      <h1 class="fb-title">ChatKing</h1>
+      <p>Apne dosto ke saath message karo</p>
+    </div>
+    <div class="fb-side">
+      <div class="fb-card">
+        <input id="aName" class="fb-in hidden" placeholder="Full name">
+        <input id="aUser" class="fb-in hidden" placeholder="Username (a-z, 0-9, _ .)" autocapitalize="none">
+        <input id="aEmail" type="email" class="fb-in" placeholder="Email">
+        <input id="aPass" type="password" class="fb-in" placeholder="Password">
+        <button id="btnLogin" class="fb-btn">Log in</button>
+        <button id="btnSignup" class="fb-btn hidden">Sign up</button>
+        <p id="aErr" class="err"></p>
+        <div class="or"><span></span><small>YA</small><span></span></div>
+        <button id="btnGoogle" class="gbtn2">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6C12.3 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.4 28.8c-.5-1.4-.8-2.9-.8-4.8s.3-3.4.8-4.8l-7.8-6C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.7-4-13.6-9.7l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>
+          Google se login karo
+        </button>
+      </div>
+      <button id="toggleMode" class="fb-new">Create new account</button>
+      <span id="switchText" class="hidden"></span>
+    </div>
+  </div>
+</section>
+
+<!-- HOME -->
+<section id="home" class="screen">
+  <div class="top"><b>ChatKing</b></div>
+
+  <div class="pane" id="paneChats">
+    <div id="reqBox" class="hidden"></div>
+    <div id="chatList"></div>
+    <p class="empty hidden" id="noChats">Abhi koi chat nahi.<br>Search tab mein dost ki User ID dhoondo aur friend request bhejo.</p>
+  </div>
+
+  <div class="pane hidden" id="paneFind">
+    <div class="pad">
+      <input id="findId" class="search" placeholder="Dost ki User ID daalo (e.g. sanu_07)" autocapitalize="none">
+      <div style="height:10px"></div>
+      <button class="pbtn" id="btnFind">Search</button>
+      <div id="findResult" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <div class="pane hidden" id="paneProfile">
+    <div class="avatar big" id="pAvatar"></div>
+    <div id="pName" style="text-align:center;font-size:20px;font-weight:600"></div>
+    <div id="pUser" style="text-align:center;color:var(--muted);margin-top:4px"></div>
+    <div class="stats"><div><b id="pFriends">0</b><small>Friends</small></div></div>
+    <div class="field"><label>Name</label><input id="pNameIn" maxlength="40"></div>
+    <div class="field"><label>Bio</label><input id="pBio" maxlength="100"></div>
+    <div class="field"><label>Age</label><input id="pAge" type="number" min="1" max="120" inputmode="numeric"></div>
+    <div class="field"><label>Address</label><input id="pAddr" maxlength="120"></div>
+    <div class="field"><label>User ID</label>
+      <div style="display:flex;gap:8px;align-items:center"><input id="pId" readonly style="flex:1"><button class="gbtn" id="btnCopy">Copy</button></div>
+    </div>
+    <div class="pad">
+      <p id="pMsg" class="err"></p>
+      <button class="pbtn" id="btnSaveProfile">Save</button>
+      <button class="gbtn" id="btnLogout" style="width:100%;margin-top:12px">Logout</button>
+    </div>
+  </div>
+
+  <nav>
+    <button data-tab="paneChats" class="on"><i>🏠</i>Home<em id="navBadge" class="badge hidden"></em></button>
+    <button data-tab="paneFind"><i>🔍</i>Search</button>
+    <button data-tab="paneProfile"><i>👤</i>Profile</button>
+  </nav>
+</section>
+
+<!-- CHAT PAGE -->
+<section id="chat" class="screen">
+  <div class="top">
+    <button class="back" id="btnBack">←</button>
+    <div class="avatar sm" id="cAvatar"></div>
+    <div style="display:flex;flex-direction:column;min-width:0">
+      <b id="cName" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></b>
+      <span class="sub" id="cStatus"></span>
+    </div>
+  </div>
+  <div id="msgs"></div>
+  <form id="bar">
+    <input id="msgInput" placeholder="Message likho" autocomplete="off">
+    <button id="sendBtn" type="submit">➤</button>
+  </form>
+</section>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,deleteUser,GoogleAuthProvider,signInWithPopup,signInWithRedirect}
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,getDocs,updateDoc,deleteDoc,collection,query,where,onSnapshot,addDoc,orderBy,writeBatch,increment}
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC2JA1JXVgAgjckzsv3QYI4o6EXp7ptvtQ",
+  authDomain: "chatking-f5e9e.firebaseapp.com",
+  projectId: "chatking-f5e9e",
+  storageBucket: "chatking-f5e9e.firebasestorage.app",
+  messagingSenderId: "748544058364",
+  appId: "1:748544058364:web:0ab6641a8c6a8cd565c879"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ---------- helpers ---------- */
+let me = null, currentChat = null, presenceStarted = false, signupMode = false, signingUp = false;
+let unsubChats = null, unsubMsgs = null, unsubPresence = null, unsubReq = null;
+const userCache = {};
+const RANK = {sent: 0, delivered: 1, read: 2};
+const ONLINE_MS = 60000;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const initials = n => (n || "?").trim()[0].toUpperCase();
+const chatIdFor = (a, b) => [a, b].sort().join("_");
+const fmtTime = t => new Date(t).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+function fmtDay(t) {
+  const d = new Date(t), n = new Date(), y = new Date(n);
+  y.setDate(n.getDate() - 1);
+  if (d.toDateString() === n.toDateString()) return fmtTime(t);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], {day: "numeric", month: "short"});
+}
+function fmtSeen(t) {
+  const d = new Date(t), n = new Date();
+  return d.toDateString() === n.toDateString()
+    ? "last seen today at " + fmtTime(t)
+    : "last seen " + d.toLocaleDateString([], {day: "numeric", month: "short"}) + " at " + fmtTime(t);
+}
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+}
+async function getUser(uid) {
+  if (!userCache[uid]) {
+    const s = await getDoc(doc(db, "users", uid));
+    userCache[uid] = {uid, name: "Unknown", ...(s.data() || {})};
+  }
+  return userCache[uid];
+}
+
+/* ---------- friend requests ---------- */
+// requests/{from}_{to} = {from, to, status: "pending" | "accepted"}
+async function relation(uid) {
+  const [a, b] = await Promise.all([
+    getDoc(doc(db, "requests", me.uid + "_" + uid)),
+    getDoc(doc(db, "requests", uid + "_" + me.uid))
+  ]);
+  if ((a.exists() && a.data().status === "accepted") || (b.exists() && b.data().status === "accepted")) return "friends";
+  if (b.exists()) return "received";
+  if (a.exists()) return "sent";
+  return "none";
+}
+async function acceptRequest(fromUid) {
+  await updateDoc(doc(db, "requests", fromUid + "_" + me.uid), {status: "accepted"});
+  await deleteDoc(doc(db, "requests", me.uid + "_" + fromUid));
+  const ref = doc(db, "chats", chatIdFor(me.uid, fromUid));
+  if (!(await getDoc(ref)).exists())
+    await setDoc(ref, {members: [me.uid, fromUid], lastText: "Ab aap dono dost ho 👋", lastTime: Date.now()});
+}
+const declineRequest = fromUid => deleteDoc(doc(db, "requests", fromUid + "_" + me.uid));
+
+async function refreshCounts() {
+  const [x, y] = await Promise.all(["from", "to"].map(f =>
+    getDocs(query(collection(db, "requests"), where(f, "==", me.uid), where("status", "==", "accepted")))));
+  $("pFriends").textContent = x.size + y.size;
+}
+
+/* ---------- login / signup ---------- */
+function setMode(signup) {
+  signupMode = signup;
+  $("aName").classList.toggle("hidden", !signup);
+  $("aUser").classList.toggle("hidden", !signup);
+  $("btnLogin").classList.toggle("hidden", signup);
+  $("btnSignup").classList.toggle("hidden", !signup);
+  $("switchText").textContent = signup ? "Have an account?" : "Don't have an account?";
+  $("toggleMode").textContent = signup ? "Log in" : "Create new account";
+  $("aErr").textContent = "";
+}
+$("toggleMode").onclick = () => setMode(!signupMode);
+setMode(false);
+
+const withTimeout = (p, ms, msg) =>
+  Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
+const DB_MSG = "Database se connect nahi ho raha. Firebase mein Firestore Database bana hua hai aur Rules publish hain, ye check karo.";
+
+$("btnSignup").onclick = async () => {
+  const name = $("aName").value.trim(), email = $("aEmail").value.trim(), pass = $("aPass").value;
+  const userId = $("aUser").value.trim().toLowerCase();
+  if (!name) return ($("aErr").textContent = "Naam daalo");
+  if (!/^[a-z0-9_.]{3,20}$/.test(userId)) return ($("aErr").textContent = "Username 3-20 akshar ka ho, sirf a-z, 0-9, _ ya .");
+  signingUp = true;
+  $("aErr").textContent = "Account ban raha hai, ruko...";
+  try {
+    const cred = await withTimeout(createUserWithEmailAndPassword(auth, email, pass), 20000,
+      "Firebase Auth se connect nahi ho raha. Internet check karo.");
+    $("aErr").textContent = "Profile save ho rahi hai...";
+    const taken = await withTimeout(getDocs(query(collection(db, "users"), where("userId", "==", userId))), 15000, DB_MSG);
+    if (!taken.empty) {
+      await deleteUser(cred.user);
+      throw new Error("Ye username le liya gaya hai, koi aur try karo");
+    }
+    await withTimeout(setDoc(doc(db, "users", cred.user.uid), {
+      uid: cred.user.uid, name, userId, bio: "Hey there! 💗", lastSeen: Date.now()
+    }), 15000, DB_MSG);
+    signingUp = false;
+    await loadApp(cred.user.uid);
+  } catch (e) {
+    signingUp = false;
+    $("aErr").textContent = e.message;
+  }
+};
+
+$("btnLogin").onclick = async () => {
+  $("aErr").textContent = "";
+  try {
+    await signInWithEmailAndPassword(auth, $("aEmail").value.trim(), $("aPass").value);
+  } catch (e) {
+    $("aErr").textContent = e.message;
+  }
+};
+
+const gProvider = new GoogleAuthProvider();
+gProvider.setCustomParameters({prompt: "select_account"});
+$("btnGoogle").onclick = async () => {
+  $("aErr").textContent = "";
+  try {
+    await signInWithPopup(auth, gProvider);
+  } catch (e) {
+    if (e.code === "auth/popup-blocked") await signInWithRedirect(auth, gProvider);
+    else $("aErr").textContent = e.message;
+  }
+};
+
+// Google se pehli baar login hone par profile apne aap ban jaati hai
+async function ensureProfile(user) {
+  const ref = doc(db, "users", user.uid);
+  if ((await getDoc(ref)).exists()) return;
+  const base = (user.email || "user").split("@")[0].toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 14) || "user";
+  let userId;
+  do {
+    userId = base + Math.floor(1000 + Math.random() * 9000);
+  } while (!(await getDocs(query(collection(db, "users"), where("userId", "==", userId)))).empty);
+  await setDoc(ref, {uid: user.uid, name: user.displayName || base, userId, bio: "Hey there! 💗", lastSeen: Date.now()});
+}
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    me = null;
+    if (unsubChats) unsubChats();
+    if (unsubReq) unsubReq();
+    showScreen("auth");
+    return;
+  }
+  if (!signingUp) ensureProfile(user).then(() => loadApp(user.uid)).catch(e => ($("aErr").textContent = e.message));
+});
+
+function fillProfile() {
+  $("pName").textContent = me.name;
+  $("pAvatar").textContent = initials(me.name);
+  $("pUser").textContent = "@" + me.userId;
+  $("pNameIn").value = me.name || "";
+  $("pBio").value = me.bio ?? me.about ?? "";
+  $("pAge").value = me.age ?? "";
+  $("pAddr").value = me.address ?? "";
+  $("pId").value = me.userId;
+}
+
+async function loadApp(uid) {
+  const s = await getDoc(doc(db, "users", uid));
+  if (!s.exists()) {
+    await signOut(auth);
+    throw new Error("Profile nahi mili. Dobara Create account karo ya naya email use karo.");
+  }
+  me = {uid, ...s.data()};
+  fillProfile();
+  showScreen("home");
+  startPresence();
+  listChats();
+  listRequests();
+  refreshCounts();
+}
+
+// Aaye hue friend requests (Home ke upar, Accept / Decline)
+function listRequests() {
+  if (unsubReq) unsubReq();
+  unsubReq = onSnapshot(query(collection(db, "requests"), where("to", "==", me.uid), where("status", "==", "pending")), async snap => {
+    const users = await Promise.all(snap.docs.map(d => getUser(d.data().from)));
+    const box = $("reqBox");
+    box.classList.toggle("hidden", !users.length);
+    box.innerHTML = users.length ? `<div class="sec">Friend requests (${users.length})</div>` : "";
+    users.forEach(u => {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `<div class="avatar">${esc(initials(u.name))}</div>
+        <div class="mid"><b>${esc(u.name)}</b><small>@${esc(u.userId)}</small></div>
+        <div class="reqbtns"><button class="pbtn" style="width:auto">Accept</button><button class="gbtn">Decline</button></div>`;
+      const [ok, no] = row.querySelectorAll("button");
+      ok.onclick = async () => { ok.disabled = no.disabled = true; await acceptRequest(u.uid); refreshCounts(); };
+      no.onclick = async () => { ok.disabled = no.disabled = true; await declineRequest(u.uid); };
+      box.appendChild(row);
+    });
+    $("navBadge").textContent = users.length;
+    $("navBadge").classList.toggle("hidden", !users.length);
+  });
+}
+
+/* ---------- last seen heartbeat ---------- */
+function startPresence() {
+  if (presenceStarted) return;
+  presenceStarted = true;
+  const beat = () => me && updateDoc(doc(db, "users", me.uid), {lastSeen: Date.now()}).catch(() => {});
+  beat();
+  setInterval(beat, 30000);
+  document.addEventListener("visibilitychange", () => {
+    beat();
+    if (currentChat && document.visibilityState === "visible" && $("chat").classList.contains("active")) listMessages();
+  });
+  window.addEventListener("beforeunload", beat);
+}
+
+/* ---------- chat list ---------- */
+function listChats() {
+  if (unsubChats) unsubChats();
+  unsubChats = onSnapshot(query(collection(db, "chats"), where("members", "array-contains", me.uid)), async snap => {
+    const chats = snap.docs.map(d => ({id: d.id, ...d.data()}))
+      .sort((a, b) => (b.lastTime || 0) - (a.lastTime || 0));
+    const others = await Promise.all(chats.map(c => getUser(c.members.find(m => m !== me.uid))));
+    $("noChats").classList.toggle("hidden", chats.length > 0);
+    const list = $("chatList");
+    list.innerHTML = "";
+    chats.forEach((c, i) => {
+      const other = others[i], unread = c["unread_" + me.uid] || 0;
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `<div class="avatar">${esc(initials(other.name))}</div>
+        <div class="mid"><b>${esc(other.name)}</b><span class="last">${esc(c.lastText || "")}</span></div>
+        <div class="right"><span>${c.lastTime ? fmtDay(c.lastTime) : ""}</span>${unread ? `<span class="badge">${unread}</span>` : ""}</div>`;
+      row.onclick = () => openChat(other);
+      list.appendChild(row);
+    });
+  });
+}
+
+/* ---------- search by User ID + friend request ---------- */
+async function renderUser(u, box) {
+  const rel = await relation(u.uid);
+  const note = {
+    none: "Chat karne ke liye pehle friend request bhejo.",
+    sent: "Request bhej di gayi hai. Accept hone ka intezaar hai.",
+    received: "Is user ne aapko friend request bheji hai."
+  }[rel] || "";
+  const btns = {
+    none: '<button class="pbtn" id="b1">Add Friend</button>',
+    sent: '<button class="gbtn" id="b1">Cancel request</button>',
+    received: '<button class="pbtn" id="b1">Accept</button><button class="gbtn" id="b2">Decline</button>',
+    friends: '<button class="pbtn" id="b1">Message</button>'
+  }[rel];
+  box.innerHTML = `<div class="card">
+      <div class="avatar">${esc(initials(u.name))}</div>
+      <div class="mid"><b>${esc(u.name)}</b><small>@${esc(u.userId)}</small><small>${esc(u.bio ?? u.about ?? "")}</small></div>
+    </div>
+    <div class="btns">${btns}</div>
+    ${note ? `<p class="empty" style="padding:8px">${note}</p>` : ""}`;
+  const redo = () => renderUser(u, box);
+  $("b1").onclick = async () => {
+    if (rel === "none") await setDoc(doc(db, "requests", me.uid + "_" + u.uid), {from: me.uid, to: u.uid, status: "pending", time: Date.now()});
+    else if (rel === "sent") await deleteDoc(doc(db, "requests", me.uid + "_" + u.uid));
+    else if (rel === "received") { await acceptRequest(u.uid); refreshCounts(); }
+    else return openChat(u);
+    redo();
+  };
+  if (rel === "received") $("b2").onclick = async () => { await declineRequest(u.uid); redo(); };
+}
+
+$("btnFind").onclick = async () => {
+  const raw = $("findId").value.trim().toLowerCase().replace(/^@/, "");
+  const res = $("findResult");
+  if (!raw) return;
+  res.innerHTML = '<p class="empty">Dhoond rahe hain...</p>';
+  try {
+    const snap = await getDocs(query(collection(db, "users"), where("userId", "in", [...new Set([raw, raw.toUpperCase()])])));
+    const hit = snap.docs.find(d => d.id !== me.uid);
+    if (!hit) {
+      res.innerHTML = '<p class="empty">' + (snap.empty ? "Ye User ID nahi mili." : "Ye aapki apni User ID hai 🙂") + '</p>';
+      return;
+    }
+    const box = document.createElement("div");
+    res.innerHTML = "";
+    res.appendChild(box);
+    renderUser({uid: hit.id, ...hit.data()}, box);
+  } catch (e) {
+    res.innerHTML = '<p class="err">' + esc(e.message) + '</p>';
+  }
+};
+$("findId").addEventListener("keydown", e => e.key === "Enter" && $("btnFind").click());
+
+/* ---------- chat page ---------- */
+async function openChat(u) {
+  currentChat = {id: chatIdFor(me.uid, u.uid), other: u};
+  const ref = doc(db, "chats", currentChat.id);
+  const s = await getDoc(ref);
+  if (!s.exists()) {
+    if ((await relation(u.uid)) !== "friends") { currentChat = null; return alert("Pehle friend request accept honi chahiye."); }
+    await setDoc(ref, {members: [me.uid, u.uid], lastText: "", lastTime: 0});
+  }
+  await updateDoc(ref, {["unread_" + me.uid]: 0});
+  $("cAvatar").textContent = initials(u.name);
+  $("cName").textContent = u.name;
+  $("cStatus").textContent = "";
+  showScreen("chat");
+  listMessages();
+  listPresence(u.uid);
+}
+
+function listPresence(uid) {
+  if (unsubPresence) unsubPresence();
+  unsubPresence = onSnapshot(doc(db, "users", uid), s => {
+    const d = s.data() || {};
+    const online = d.lastSeen && Date.now() - d.lastSeen < ONLINE_MS;
+    $("cStatus").textContent = online ? "online" : d.lastSeen ? fmtSeen(d.lastSeen) : "";
+  });
+}
+
+// ✓ sent, ✓✓ delivered, neeche blue ✓✓ read
+function listMessages() {
+  if (unsubMsgs) unsubMsgs();
+  const chatRef = doc(db, "chats", currentChat.id);
+  const q = query(collection(db, "chats", currentChat.id, "messages"), orderBy("time"));
+  unsubMsgs = onSnapshot(q, snap => {
+    const box = $("msgs");
+    box.innerHTML = "";
+    const batch = writeBatch(db);
+    let pending = false;
+    const viewing = document.visibilityState === "visible";
+    snap.docs.forEach(d => {
+      const m = d.data(), mine = m.from === me.uid;
+      if (!mine) {
+        const target = viewing ? "read" : "delivered";
+        if (RANK[m.status] < RANK[target]) { batch.update(d.ref, {status: target}); pending = true; }
+      }
+      box.appendChild(bubble(m, mine));
+    });
+    if (pending && viewing) batch.update(chatRef, {["unread_" + me.uid]: 0});
+    if (pending) batch.commit().catch(() => {});
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+function bubble(m, mine) {
+  const el = document.createElement("div");
+  el.className = "bub " + (mine ? "me" : "them");
+  let ticks = "";
+  if (mine) {
+    if (m.status === "read") ticks = '<span class="tk read">✓✓</span>';
+    else if (m.status === "delivered") ticks = '<span class="tk">✓✓</span>';
+    else ticks = '<span class="tk">✓</span>';
+  }
+  el.innerHTML = `${esc(m.text)}<div class="meta">${fmtTime(m.time)} ${ticks}</div>`;
+  return el;
+}
+
+$("bar").onsubmit = async e => {
+  e.preventDefault();
+  const text = $("msgInput").value.trim();
+  if (!text || !currentChat) return;
+  $("msgInput").value = "";
+  const now = Date.now();
+  const ref = doc(db, "chats", currentChat.id);
+  await addDoc(collection(db, "chats", currentChat.id, "messages"), {from: me.uid, text, time: now, status: "sent"});
+  await updateDoc(ref, {lastText: text, lastTime: now, ["unread_" + currentChat.other.uid]: increment(1)});
+};
+
+$("btnBack").onclick = () => {
+  if (unsubMsgs) unsubMsgs();
+  if (unsubPresence) unsubPresence();
+  currentChat = null;
+  showScreen("home");
+};
+
+/* ---------- tabs, profile ---------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("hidden", p.id !== b.dataset.tab));
+  if (b.dataset.tab === "paneProfile") refreshCounts();
+});
+
+$("btnCopy").onclick = () => {
+  navigator.clipboard?.writeText(me.userId);
+  $("btnCopy").textContent = "Copied ✓";
+  setTimeout(() => ($("btnCopy").textContent = "Copy"), 1500);
+};
+
+$("btnSaveProfile").onclick = async () => {
+  const name = $("pNameIn").value.trim(), age = $("pAge").value.trim(), msg = $("pMsg");
+  if (!name) return (msg.textContent = "Naam khaali nahi ho sakta");
+  if (age && !(+age >= 1 && +age <= 120)) return (msg.textContent = "Age 1 se 120 ke beech daalo");
+  const data = {name, bio: $("pBio").value.trim(), age: age ? +age : "", address: $("pAddr").value.trim()};
+  try {
+    await updateDoc(doc(db, "users", me.uid), data);
+    Object.assign(me, data);
+    userCache[me.uid] = {...userCache[me.uid], ...me};
+    fillProfile();
+    msg.textContent = "";
+    $("btnSaveProfile").textContent = "Saved ✓";
+    setTimeout(() => ($("btnSaveProfile").textContent = "Save"), 1500);
+  } catch (e) {
+    msg.textContent = e.message;
+  }
+};
+
+$("btnLogout").onclick = () => signOut(auth);
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
